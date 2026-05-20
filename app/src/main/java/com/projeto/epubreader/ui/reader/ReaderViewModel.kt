@@ -8,6 +8,7 @@ import com.projeto.epubreader.data.db.BookRepository
 import com.projeto.epubreader.data.db.BookEntity
 import com.projeto.epubreader.parser.EpubParser
 import kotlinx.coroutines.launch
+import java.io.File
 
 class ReaderViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -17,6 +18,8 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
     val currentBook = MutableLiveData<BookEntity>()
     val currentChapterIndex = MutableLiveData<Int>(0)
     val chapterContent = MutableLiveData<String>()
+    val totalChapters = MutableLiveData<Int>(0)
+    val chapterBaseDir = MutableLiveData<String>()
 
     fun loadBook(bookId: Long) = viewModelScope.launch {
         val book = repository.getBook(bookId) ?: return@launch
@@ -32,14 +35,20 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     private fun loadChapter(book: BookEntity, index: Int) = viewModelScope.launch {
-        // Re-parseia para pegar a lista de capítulos
-        val epubBook = parser.parse(java.io.File(book.filePath))
-        val chapter = epubBook.chapters.getOrNull(index) ?: return@launch
-        val html = java.io.File(chapter.filePath).readText()
-        // Injeta CSS base para leitura confortável
-        val styledHtml = injectReadingStyles(html, book.extractedDir)
+        val epubBook = parser.parse(File(book.filePath))
+        val chapters = epubBook.chapters
+        totalChapters.postValue(chapters.size)
+        val chapter = chapters.getOrNull(index) ?: return@launch
+
+        val chapterFile = File(chapter.filePath)
+        val chapterDir = chapterFile.parent ?: epubBook.opfDir.absolutePath  // ← pasta do capítulo
+
+        chapterBaseDir.postValue(chapterDir)   // ← novo LiveData
+        val html = chapterFile.readText()
+        val styledHtml = injectReadingStyles(html, chapterDir)
         chapterContent.postValue(styledHtml)
     }
+
 
     fun saveProgress(scrollY: Int) = viewModelScope.launch {
         val book = currentBook.value ?: return@launch

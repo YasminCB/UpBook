@@ -10,7 +10,6 @@ class ReaderActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityReaderBinding
     private val viewModel: ReaderViewModel by viewModels()
-    private var totalChapters = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,15 +22,19 @@ class ReaderActivity : AppCompatActivity() {
 
         setupWebView()
         setupButtons()
-        viewModel.loadBook(bookId)
         observeViewModel()
+        viewModel.loadBook(bookId)
     }
 
     private fun setupWebView() {
         binding.webView.apply {
-            settings.javaScriptEnabled = false
+            settings.javaScriptEnabled = true
             settings.builtInZoomControls = true
             settings.displayZoomControls = false
+            settings.allowFileAccess = true
+            settings.allowFileAccess = true
+            settings.allowContentAccess = true          // ← adicione essa
+            settings.allowFileAccessFromFileURLs = true // ← e essa
             webViewClient = WebViewClient()
         }
     }
@@ -44,24 +47,33 @@ class ReaderActivity : AppCompatActivity() {
 
         binding.btnNextChapter.setOnClickListener {
             val current = viewModel.currentChapterIndex.value ?: 0
-            if (current < totalChapters - 1) viewModel.loadChapter(current + 1)
+            val total = viewModel.totalChapters.value ?: 0
+            if (current < total - 1) viewModel.loadChapter(current + 1)
         }
     }
 
     private fun observeViewModel() {
+        // Título do livro
         viewModel.currentBook.observe(this) { book ->
             supportActionBar?.title = book.title
         }
 
+        // Atualiza info "Cap. X / Y" sempre que capítulo ou total mudar
         viewModel.currentChapterIndex.observe(this) { index ->
-            binding.tvChapterInfo.text = "Cap. ${index + 1} / $totalChapters"
+            val total = viewModel.totalChapters.value ?: 0
+            binding.tvChapterInfo.text = "Cap. ${index + 1} / $total"
         }
 
+        viewModel.totalChapters.observe(this) { total ->
+            val index = viewModel.currentChapterIndex.value ?: 0
+            binding.tvChapterInfo.text = "Cap. ${index + 1} / $total"
+        }
+
+        // Carrega HTML no WebView
         viewModel.chapterContent.observe(this) { html ->
-            val book = viewModel.currentBook.value ?: return@observe
-            // Usa file:// para que o WebView resolva imagens/CSS relativos
+            val baseDir = viewModel.chapterBaseDir.value ?: return@observe
             binding.webView.loadDataWithBaseURL(
-                "file://${book.extractedDir}/",
+                "file://$baseDir/",   // ← pasta real do capítulo
                 html,
                 "text/html",
                 "UTF-8",
@@ -72,8 +84,6 @@ class ReaderActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        // Salva progresso ao sair
-        val scrollY = binding.webView.scrollY
-        viewModel.saveProgress(scrollY)
+        viewModel.saveProgress(binding.webView.scrollY)
     }
 }

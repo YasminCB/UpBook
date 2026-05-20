@@ -12,7 +12,8 @@ data class EpubBook(
     val author: String,
     val coverPath: String?,
     val chapters: List<Chapter>,
-    val extractedDir: File
+    val extractedDir: File,
+    val opfDir: File
 )
 
 data class Chapter(
@@ -44,7 +45,8 @@ class EpubParser(private val context: Context) {
             author = opfData.author,
             coverPath = opfData.coverPath,
             chapters = opfData.chapters,
-            extractedDir = destDir
+            extractedDir = destDir,
+            opfDir = opfDir
         )
     }
 
