@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:text="Temas prontos"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"/>
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="2"
+            android:rowCount="3"
+            android:useDefaultMargins="true">
+
+            <Button android:id="@+id/btnThemeDefault"
+                android:layout_width="0dp" android:layout_height="56dp"
+                android:layout_columnWeight="1" android:text="Padrão"/>
+            <Button android:id="@+id/btnThemeSepia"
+                android:layout_width="0dp" android:layout_height="56dp"
+                android:layout_columnWeight="1" android:text="Sépia"/>
+            <Button android:id="@+id/btnThemeDark"
+                android:layout_width="0dp" android:layout_height="56dp"
+                android:layout_columnWeight="1" android:text="Escuro"/>
+            <Button android:id="@+id/btnThemeAmoled"
+                android:layout_width="0dp" android:layout_height="56dp"
+                android:layout_columnWeight="1" android:text="AMOLED"/>
+            <Button android:id="@+id/btnThemeGreen"
+                android:layout_width="0dp" android:layout_height="56dp"
+                android:layout_columnWeight="1" android:text="Verde"/>
+        </GridLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#DDDDDD"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"/>
+
+        <TextView
+            android:text="Cor personalizada"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/previewText"
+            android:text="Texto de exemplo para visualização"
+            android:padding="12dp"
+            android:textSize="16sp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="#FFFFFF"
+            android:textColor="#222222"/>
+
+        <TextView android:text="Fundo — Vermelho"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekBgR" android:max="255" android:progress="255"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView android:text="Fundo — Verde"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekBgG" android:max="255" android:progress="255"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView android:text="Fundo — Azul"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekBgB" android:max="255" android:progress="255"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"/>
+
+        <TextView android:text="Fonte — Vermelho"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekFgR" android:max="255" android:progress="34"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView android:text="Fonte — Verde"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekFgG" android:max="255" android:progress="34"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView android:text="Fonte — Azul"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <SeekBar android:id="@+id/seekFgB" android:max="255" android:progress="34"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
+            android:id="@+id/btnApplyCustom"
+            android:text="Aplicar cor personalizada"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"/>
+
+    </LinearLayout>
+</ScrollView>

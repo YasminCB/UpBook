@@ -21,6 +21,23 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
     val totalChapters = MutableLiveData<Int>(0)
     val chapterBaseDir = MutableLiveData<String>()
 
+    val readerTheme = MutableLiveData<ReaderTheme>(ReaderTheme.DEFAULT)
+
+    data class ReaderTheme(
+        val backgroundColor: String,
+        val textColor: String,
+        val name: String
+    ) {
+        companion object {
+            val DEFAULT    = ReaderTheme("#FFFFFF", "#222222", "Padrão")
+            val SEPIA      = ReaderTheme("#F5E6C8", "#3B2A1A", "Sépia")
+            val DARK       = ReaderTheme("#1A1A1A", "#E0E0E0", "Escuro")
+            val AMOLED     = ReaderTheme("#000000", "#FFFFFF", "AMOLED")
+            val GREEN      = ReaderTheme("#1A2A1A", "#90EE90", "Verde")
+            val CUSTOM     = ReaderTheme("#FFFFFF", "#222222", "Personalizado")
+        }
+    }
+
     fun loadBook(bookId: Long) = viewModelScope.launch {
         val book = repository.getBook(bookId) ?: return@launch
         currentBook.value = book
@@ -62,28 +79,35 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
         repository.addBookmark(book.id, chapter, scrollY)
     }
 
-    private fun injectReadingStyles(html: String, extractedDir: String): String {
-        val baseUrl = "file://$extractedDir/"
+    private fun injectReadingStyles(html: String, baseDir: String): String {
+        val theme = readerTheme.value ?: ReaderTheme.DEFAULT
         val css = """
-            <style>
-              body { 
-                font-family: Georgia, serif; 
-                font-size: 18px; 
-                line-height: 1.8; 
-                margin: 16px; 
-                color: #222; 
-                background: #fff;
-                max-width: 680px;
-              }
-              img { max-width: 100%; height: auto; }
-              a { color: #1565C0; }
-            </style>
-        """.trimIndent()
+        <style>
+          body { 
+            font-family: Georgia, serif; 
+            font-size: 18px; 
+            line-height: 1.8; 
+            margin: 16px; 
+            color: ${theme.textColor}; 
+            background: ${theme.backgroundColor};
+            max-width: 680px;
+          }
+          img { max-width: 100%; height: auto; }
+          a { color: #1565C0; }
+        </style>
+    """.trimIndent()
 
         return if (html.contains("<head>", ignoreCase = true)) {
             html.replace("<head>", "<head>$css", ignoreCase = true)
         } else {
             "<html><head>$css</head><body>$html</body></html>"
         }
+    }
+    fun applyTheme(theme: ReaderTheme) {
+        readerTheme.value = theme
+        // Recarrega o capítulo atual com o novo tema
+        val book = currentBook.value ?: return
+        val index = currentChapterIndex.value ?: 0
+        loadChapter(book, index)
     }
 }

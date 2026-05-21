@@ -23,6 +23,12 @@ class ReaderActivity : AppCompatActivity() {
         setupWebView()
         setupButtons()
         observeViewModel()
+        binding.btnTheme.setOnClickListener {
+            val current = viewModel.readerTheme.value ?: ReaderViewModel.ReaderTheme.DEFAULT
+            ThemeBottomSheet(current) { theme ->
+                viewModel.applyTheme(theme)
+            }.show(supportFragmentManager, "theme")
+        }
         viewModel.loadBook(bookId)
     }
 
