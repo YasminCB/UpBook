@@ -1,9 +1,9 @@
 package com.projeto.epubreader.ui.reader
 
 import android.os.Bundle
-import android.webkit.WebViewClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.projeto.epubreader.databinding.ActivityReaderBinding
@@ -12,6 +12,16 @@ class ReaderActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityReaderBinding
     private val viewModel: ReaderViewModel by viewModels()
+
+    // ← AQUI, fora de qualquer função
+    inner class FootnoteInterface {
+        @android.webkit.JavascriptInterface
+        fun showFootnote(content: String) {
+            runOnUiThread {
+                showFootnoteDialog(content)
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,6 +52,7 @@ class ReaderActivity : AppCompatActivity() {
             settings.allowFileAccess = true
             settings.allowContentAccess = true
             settings.allowFileAccessFromFileURLs = true
+            addJavascriptInterface(FootnoteInterface(), "AndroidFootnote")
 
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(
@@ -55,24 +66,17 @@ class ReaderActivity : AppCompatActivity() {
                         val href = url.removePrefix("epub-link://")
                         val baseDir = viewModel.chapterBaseDir.value ?: return true
 
-                        // Separa arquivo e âncora
                         val parts = href.split("#")
                         val filePart = parts.getOrNull(0) ?: ""
-                        val fragment = parts.getOrNull(1)
-
-                        if (fragment == null) return true // sem âncora, ignora
+                        val fragment = parts.getOrNull(1) ?: return true
 
                         val targetFile = if (filePart.isBlank()) {
-                            // âncora no mesmo arquivo
-                            java.io.File(viewModel.chapterBaseDir.value + "/../" +
-                            viewModel.currentBook.value?.let { "" } ?: "")
-                            // pega o arquivo atual do capítulo
                             java.io.File(viewModel.currentChapterPath.value ?: return true)
                         } else {
                             java.io.File(baseDir, filePart)
                         }
 
-                        android.util.Log.d("READER_LINK", "Arquivo: ${targetFile.absolutePath}, fragment: $fragment")
+                        android.util.Log.d("READER_LINK", "Nota em: ${targetFile.absolutePath}, id: $fragment")
 
                         try {
                             if (targetFile.exists()) {
@@ -88,6 +92,14 @@ class ReaderActivity : AppCompatActivity() {
                         }
                         return true
                     }
+
+                    if (url.startsWith("epub-nav://")) {
+                        android.util.Log.d("READER_LINK", "Navegação ignorada: $url")
+                        return true
+                    }
+
+                    if (url.startsWith("file://")) return true
+
                     return false
                 }
             }
@@ -95,7 +107,6 @@ class ReaderActivity : AppCompatActivity() {
     }
 
     private fun extractAnchorContent(html: String, anchorId: String): String {
-        // Tenta pegar <p>, <div> ou <li> com o id
         val paragraphPattern = Regex(
             """<(p|div|li)[^>]*id=["\']${Regex.escape(anchorId)}["\'][^>]*>(.*?)</\1>""",
             setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.IGNORE_CASE)
@@ -104,7 +115,6 @@ class ReaderActivity : AppCompatActivity() {
             return it.groupValues[2].trim()
         }
 
-        // Fallback: pega conteúdo após o id até fechar a tag
         val fallback = Regex(
             """id=["\']${Regex.escape(anchorId)}["\'][^>]*>(.*?)</(?:p|div|li|a)>""",
             setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.IGNORE_CASE)

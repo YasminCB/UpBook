@@ -112,29 +112,43 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
 """.trimIndent()
 
         val script = """
-            <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                document.querySelectorAll('a[href]').forEach(function(link) {
-                    var href = link.getAttribute('href');
-                    if (href && href.indexOf('://') === -1) {
-                        link.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            console.log("EPUB LINK:", href);
-                            if (href.startsWith('#')) {
-                                var targetId = href.substring(1);
-                                var target = document.getElementById(targetId);
-                                if (target) {
-                                    AndroidFootnote.showFootnote(target.innerHTML);
-                                }
-                            } else {
-                                window.location.href = 'epub-link://' + href;
-                            }
-                        });
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('a[href]').forEach(function(link) {
+            var href = link.getAttribute('href');
+            if (!href || href.indexOf('://') !== -1) return;
+
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log("EPUB LINK:", href);
+
+                if (href.startsWith('#')) {
+                    var targetId = href.substring(1);
+                    var target = document.getElementById(targetId);
+                    if (target) {
+                        AndroidFootnote.showFootnote(target.innerHTML);
                     }
-                });
+                    return;
+                }
+
+                var parts = href.split('#');
+                var filePart = parts[0];
+                var fragment = parts.length > 1 ? parts[1] : null;
+
+                if (filePart && fragment) {
+                    window.location.href = 'epub-link://' + href;
+                    return;
+                }
+
+                if (filePart && !fragment) {
+                    window.location.href = 'epub-nav://' + href;
+                    return;
+                }
             });
-            </script>
-        """.trimIndent()
+        });
+    });
+    </script>
+""".trimIndent()
 
         val headInsert = css + script
 
