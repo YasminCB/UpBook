@@ -13,7 +13,6 @@ class ReaderActivity : AppCompatActivity() {
     private lateinit var binding: ActivityReaderBinding
     private val viewModel: ReaderViewModel by viewModels()
 
-    // ← AQUI, fora de qualquer função
     inner class FootnoteInterface {
         @android.webkit.JavascriptInterface
         fun showFootnote(content: String) {
@@ -76,20 +75,47 @@ class ReaderActivity : AppCompatActivity() {
                             java.io.File(baseDir, filePart)
                         }
 
-                        android.util.Log.d("READER_LINK", "Nota em: ${targetFile.absolutePath}, id: $fragment")
+                        val looksLikeNote = fragment.contains("note", ignoreCase = true) ||
+                                fragment.contains("fn", ignoreCase = true) ||
+                                fragment.contains("footnote", ignoreCase = true) ||
+                                fragment.contains("endnote", ignoreCase = true) ||
+                                fragment.contains("ref", ignoreCase = true) ||
+                                filePart.contains("note", ignoreCase = true) ||
+                                filePart.contains("fn", ignoreCase = true)
+
+                        if (looksLikeNote) {
+                            try {
+                                if (targetFile.exists()) {
+                                    val html = targetFile.readText()
+                                    val content = extractAnchorContent(html, fragment)
+                                    if (content.isNotBlank()) {
+                                        showFootnoteDialog(content)
+                                        return true
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                android.util.Log.e("READER_LINK", "Erro nota: ${e.message}")
+                            }
+                        }
+
+                        val chapterIndex = viewModel.getChapterIndexForFile(targetFile.absolutePath)
+                        if (chapterIndex >= 0) {
+                            viewModel.loadChapter(chapterIndex)
+                            return true
+                        }
 
                         try {
                             if (targetFile.exists()) {
                                 val html = targetFile.readText()
                                 val content = extractAnchorContent(html, fragment)
-                                android.util.Log.d("READER_LINK", "Conteúdo: $content")
                                 if (content.isNotBlank()) {
                                     showFootnoteDialog(content)
                                 }
                             }
                         } catch (e: Exception) {
-                            android.util.Log.e("READER_LINK", "Erro: ${e.message}")
+                            android.util.Log.e("READER_LINK", "Erro fallback: ${e.message}")
                         }
+
                         return true
                     }
 
@@ -107,7 +133,6 @@ class ReaderActivity : AppCompatActivity() {
     }
 
     private fun extractAnchorContent(html: String, anchorId: String): String {
-        // 1. Tenta pegar <p>, <div>, <li> ou <aside> com o id direto
         val directPattern = Regex(
             """<(p|div|li|aside)[^>]*id=["\']${Regex.escape(anchorId)}["\'][^>]*>(.*?)</\1>""",
             setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.IGNORE_CASE)
@@ -116,7 +141,6 @@ class ReaderActivity : AppCompatActivity() {
             return it.groupValues[2].trim()
         }
 
-        // 2. id está num <a> dentro de um <p> — pega o <p> pai
         val parentPattern = Regex(
             """<(p|div|li|aside)([^>]*)>((?:(?!</\1>).)*?<a[^>]*id=["\']${Regex.escape(anchorId)}["\'][^>]*>(?:(?!</\1>).)*?)</\1>""",
             setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.IGNORE_CASE)
@@ -125,7 +149,6 @@ class ReaderActivity : AppCompatActivity() {
             return it.groupValues[3].trim()
         }
 
-        // 3. Fallback
         val fallback = Regex(
             """id=["\']${Regex.escape(anchorId)}["\'][^>]*>(.*?)</(?:p|div|li|aside|a)>""",
             setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.IGNORE_CASE)

@@ -53,6 +53,7 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun loadChapter(book: BookEntity, index: Int) = viewModelScope.launch {
         val epubBook = parser.parse(File(book.filePath))
+        _chapters = epubBook.chapters
         val chapters = epubBook.chapters
         totalChapters.postValue(chapters.size)
         val chapter = chapters.getOrNull(index) ?: return@launch
@@ -66,6 +67,11 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
         val html = chapterFile.readText()
         val styledHtml = injectReadingStyles(html)
         chapterContent.postValue(styledHtml)
+    }
+    private var _chapters: List<com.projeto.epubreader.parser.Chapter> = emptyList()
+
+    fun getChapterIndexForFile(filePath: String): Int {
+        return _chapters.indexOfFirst { it.filePath == filePath }
     }
 
     fun applyTheme(theme: ReaderTheme) {
