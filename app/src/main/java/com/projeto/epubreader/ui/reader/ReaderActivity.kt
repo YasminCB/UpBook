@@ -107,16 +107,27 @@ class ReaderActivity : AppCompatActivity() {
     }
 
     private fun extractAnchorContent(html: String, anchorId: String): String {
-        val paragraphPattern = Regex(
-            """<(p|div|li)[^>]*id=["\']${Regex.escape(anchorId)}["\'][^>]*>(.*?)</\1>""",
+        // 1. Tenta pegar <p>, <div>, <li> ou <aside> com o id direto
+        val directPattern = Regex(
+            """<(p|div|li|aside)[^>]*id=["\']${Regex.escape(anchorId)}["\'][^>]*>(.*?)</\1>""",
             setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.IGNORE_CASE)
         )
-        paragraphPattern.find(html)?.let {
+        directPattern.find(html)?.let {
             return it.groupValues[2].trim()
         }
 
+        // 2. id está num <a> dentro de um <p> — pega o <p> pai
+        val parentPattern = Regex(
+            """<(p|div|li|aside)([^>]*)>((?:(?!</\1>).)*?<a[^>]*id=["\']${Regex.escape(anchorId)}["\'][^>]*>(?:(?!</\1>).)*?)</\1>""",
+            setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.IGNORE_CASE)
+        )
+        parentPattern.find(html)?.let {
+            return it.groupValues[3].trim()
+        }
+
+        // 3. Fallback
         val fallback = Regex(
-            """id=["\']${Regex.escape(anchorId)}["\'][^>]*>(.*?)</(?:p|div|li|a)>""",
+            """id=["\']${Regex.escape(anchorId)}["\'][^>]*>(.*?)</(?:p|div|li|aside|a)>""",
             setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.IGNORE_CASE)
         )
         fallback.find(html)?.let {
