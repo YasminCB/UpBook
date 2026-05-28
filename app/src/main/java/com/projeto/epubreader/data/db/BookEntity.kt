@@ -8,10 +8,11 @@ data class BookEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val title: String,
     val author: String,
-    val filePath: String,       // caminho do .epub original
+    val filePath: String,
     val coverPath: String?,
-    val extractedDir: String,   // pasta com HTML extraído
+    val extractedDir: String,
     val currentChapterIndex: Int = 0,
     val currentScrollY: Int = 0,
+    val totalChapters: Int = 0,
     val addedAt: Long = System.currentTimeMillis()
 )

@@ -198,14 +198,8 @@ class ReaderActivity : AppCompatActivity() {
             supportActionBar?.title = book.title
         }
 
-        viewModel.currentChapterIndex.observe(this) { index ->
-            val total = viewModel.totalChapters.value ?: 0
-            binding.tvChapterInfo.text = "Cap. ${index + 1} / $total"
-        }
-
-        viewModel.totalChapters.observe(this) { total ->
-            val index = viewModel.currentChapterIndex.value ?: 0
-            binding.tvChapterInfo.text = "Cap. ${index + 1} / $total"
+        viewModel.pageInfo.observe(this) { info ->
+            binding.tvChapterInfo.text = info
         }
 
         viewModel.chapterContent.observe(this) { html ->

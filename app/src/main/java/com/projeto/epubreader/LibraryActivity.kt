@@ -27,17 +27,28 @@ class LibraryActivity : AppCompatActivity() {
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
 
-        val adapter = BookAdapter { book ->
-            // Abre o leitor
-            val intent = Intent(this, ReaderActivity::class.java)
-            intent.putExtra("BOOK_ID", book.id)
-            startActivity(intent)
-        }
+        val adapter = BookAdapter(
+            onClick = { book ->
+                val intent = Intent(this, ReaderActivity::class.java)
+                intent.putExtra("BOOK_ID", book.id)
+                startActivity(intent)
+            },
+            onDelete = { book ->
+                android.app.AlertDialog.Builder(this)
+                    .setTitle("Deletar livro")
+                    .setMessage("Deseja remover \"${book.title}\"?")
+                    .setPositiveButton("Deletar") { _, _ ->
+                        viewModel.deleteBook(book.id)
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+            }
+        )
 
-        binding.recyclerView.adapter = adapter
+        binding.recyclerView.adapter = adapter  // ← faltava isso
 
         viewModel.books.observe(this) { books ->
-            adapter.submitList(books)
+            adapter.submitList(books)           // ← e isso
         }
 
         binding.fabAdd.setOnClickListener {

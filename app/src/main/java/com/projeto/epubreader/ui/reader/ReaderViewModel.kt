@@ -22,6 +22,7 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
     val chapterBaseDir = MutableLiveData<String>()
     val currentChapterPath = MutableLiveData<String>()
     val readerTheme = MutableLiveData<ReaderTheme>(ReaderTheme.DEFAULT)
+    val pageInfo = MutableLiveData<String>()
 
     data class ReaderTheme(
         val backgroundColor: String,
@@ -56,6 +57,7 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
         _chapters = epubBook.chapters
         val chapters = epubBook.chapters
         totalChapters.postValue(chapters.size)
+        pageInfo.postValue("Parte ${index + 1} de ${chapters.size}")
         val chapter = chapters.getOrNull(index) ?: return@launch
 
         val chapterFile = File(chapter.filePath)

@@ -15,23 +15,21 @@ class BookRepository(private val context: Context) {
     val allBooks = dao.getAllBooks()
 
     suspend fun importBook(uri: Uri): Long = withContext(Dispatchers.IO) {
-        // Copia o arquivo para armazenamento interno
         val fileName = "book_${System.currentTimeMillis()}.epub"
         val destFile = File(context.filesDir, fileName)
         context.contentResolver.openInputStream(uri)?.use { input ->
             destFile.outputStream().use { output -> input.copyTo(output) }
         }
 
-        // Faz o parse
         val book = parser.parse(destFile)
 
-        // Salva no banco
         val entity = BookEntity(
             title = book.title,
             author = book.author,
             filePath = destFile.absolutePath,
             coverPath = book.coverPath,
-            extractedDir = book.extractedDir.absolutePath
+            extractedDir = book.extractedDir.absolutePath,
+            totalChapters = book.chapters.size
         )
         dao.insertBook(entity)
     }
@@ -45,6 +43,13 @@ class BookRepository(private val context: Context) {
                 currentChapterIndex = chapterIndex,
                 currentScrollY = scrollY
             ))
+        }
+    }
+
+    suspend fun updateTotalChapters(bookId: Long, total: Int) {
+        withContext(Dispatchers.IO) {
+            val book = dao.getBookById(bookId) ?: return@withContext
+            dao.updateBook(book.copy(totalChapters = total))
         }
     }
 
@@ -62,7 +67,6 @@ class BookRepository(private val context: Context) {
 
     suspend fun deleteBook(bookId: Long) = withContext(Dispatchers.IO) {
         val book = dao.getBookById(bookId) ?: return@withContext
-        // Remove arquivos do disco
         File(book.extractedDir).deleteRecursively()
         File(book.filePath).delete()
         dao.deleteBook(book)

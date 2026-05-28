@@ -10,10 +10,9 @@ import com.projeto.epubreader.data.db.BookEntity
 import com.projeto.epubreader.databinding.ItemBookBinding
 import java.io.File
 
-
-
 class BookAdapter(
-    private val onClick: (BookEntity) -> Unit
+    private val onClick: (BookEntity) -> Unit,
+    private val onDelete: (BookEntity) -> Unit
 ) : ListAdapter<BookEntity, BookAdapter.BookViewHolder>(DiffCallback()) {
 
     inner class BookViewHolder(
@@ -25,7 +24,6 @@ class BookAdapter(
             binding.tvAuthor.text = book.author
 
             val file = book.coverPath?.let { File(it) }
-
             if (file != null && file.exists()) {
                 Glide.with(binding.imgCover.context)
                     .load(file)
@@ -34,9 +32,18 @@ class BookAdapter(
                 binding.imgCover.setImageResource(android.R.drawable.ic_menu_gallery)
             }
 
-            binding.root.setOnClickListener {
-                onClick(book)
+            // Progresso
+            if (book.totalChapters > 0) {
+                val percent = ((book.currentChapterIndex.toFloat() / book.totalChapters) * 100).toInt()
+                binding.progressBar.progress = percent
+                binding.tvProgress.text = "$percent%"
+            } else {
+                binding.progressBar.progress = 0
+                binding.tvProgress.text = "0%"
             }
+
+            binding.root.setOnClickListener { onClick(book) }
+            binding.btnDelete.setOnClickListener { onDelete(book) }
         }
     }
 
