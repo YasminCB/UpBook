@@ -2,6 +2,9 @@ package com.projeto.epubreader.ui.reader
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.GestureDetector
+import android.view.MotionEvent
+import android.view.View
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -14,17 +17,18 @@ class ReaderActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityReaderBinding
     private val viewModel: ReaderViewModel by viewModels()
+    private var isFullscreen = false
+    private var lastLoadedHtml: String = ""
+    private var lastLoadedBaseDir: String = ""
+    private lateinit var gestureDetector: GestureDetector
 
     inner class FootnoteInterface {
         @android.webkit.JavascriptInterface
         fun showFootnote(content: String) {
-            runOnUiThread {
-                showFootnoteDialog(content)
-            }
+            runOnUiThread { showFootnoteDialog(content) }
         }
     }
 
-    // ← fora do onCreate, no nível da classe
     private val indexLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -60,10 +64,36 @@ class ReaderActivity : AppCompatActivity() {
             indexLauncher.launch(i)
         }
 
+        binding.btnFullscreen.setOnClickListener {
+            toggleFullscreen()
+        }
+
         viewModel.loadBook(bookId)
     }
 
-    private fun setupWebView() {
+    private fun toggleFullscreen() {
+        isFullscreen = !isFullscreen
+        if (isFullscreen) {
+            supportActionBar?.hide()
+            binding.toolbar.visibility = View.GONE
+            binding.navBar.visibility = View.GONE
+        } else {
+            supportActionBar?.show()
+            binding.toolbar.visibility = View.VISIBLE
+            binding.navBar.visibility = View.VISIBLE
+        }
+        binding.webView.requestLayout()
+        binding.webView.invalidate()
+    }
+
+     private fun setupWebView() {
+        gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                if (isFullscreen) toggleFullscreen()
+                return true
+            }
+        })
+
         binding.webView.apply {
             settings.javaScriptEnabled = true
             settings.builtInZoomControls = true
@@ -72,6 +102,11 @@ class ReaderActivity : AppCompatActivity() {
             settings.allowContentAccess = true
             settings.allowFileAccessFromFileURLs = true
             addJavascriptInterface(FootnoteInterface(), "AndroidFootnote")
+
+            setOnTouchListener { _, event ->
+                gestureDetector.onTouchEvent(event)
+                false
+            }
 
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(
@@ -84,7 +119,6 @@ class ReaderActivity : AppCompatActivity() {
                     if (url.startsWith("epub-link://")) {
                         val href = url.removePrefix("epub-link://")
                         val baseDir = viewModel.chapterBaseDir.value ?: return true
-
                         val parts = href.split("#")
                         val filePart = parts.getOrNull(0) ?: ""
                         val fragment = parts.getOrNull(1) ?: return true
@@ -128,24 +162,16 @@ class ReaderActivity : AppCompatActivity() {
                             if (targetFile.exists()) {
                                 val html = targetFile.readText()
                                 val content = extractAnchorContent(html, fragment)
-                                if (content.isNotBlank()) {
-                                    showFootnoteDialog(content)
-                                }
+                                if (content.isNotBlank()) showFootnoteDialog(content)
                             }
                         } catch (e: Exception) {
                             android.util.Log.e("READER_LINK", "Erro fallback: ${e.message}")
                         }
-
                         return true
                     }
 
-                    if (url.startsWith("epub-nav://")) {
-                        android.util.Log.d("READER_LINK", "Navegação ignorada: $url")
-                        return true
-                    }
-
+                    if (url.startsWith("epub-nav://")) return true
                     if (url.startsWith("file://")) return true
-
                     return false
                 }
             }
@@ -157,25 +183,19 @@ class ReaderActivity : AppCompatActivity() {
             """<(p|div|li|aside)[^>]*id=["\']${Regex.escape(anchorId)}["\'][^>]*>(.*?)</\1>""",
             setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.IGNORE_CASE)
         )
-        directPattern.find(html)?.let {
-            return it.groupValues[2].trim()
-        }
+        directPattern.find(html)?.let { return it.groupValues[2].trim() }
 
         val parentPattern = Regex(
             """<(p|div|li|aside)([^>]*)>((?:(?!</\1>).)*?<a[^>]*id=["\']${Regex.escape(anchorId)}["\'][^>]*>(?:(?!</\1>).)*?)</\1>""",
             setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.IGNORE_CASE)
         )
-        parentPattern.find(html)?.let {
-            return it.groupValues[3].trim()
-        }
+        parentPattern.find(html)?.let { return it.groupValues[3].trim() }
 
         val fallback = Regex(
             """id=["\']${Regex.escape(anchorId)}["\'][^>]*>(.*?)</(?:p|div|li|aside|a)>""",
             setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.IGNORE_CASE)
         )
-        fallback.find(html)?.let {
-            return it.groupValues[1].trim()
-        }
+        fallback.find(html)?.let { return it.groupValues[1].trim() }
 
         return ""
     }
@@ -204,12 +224,10 @@ class ReaderActivity : AppCompatActivity() {
 
         viewModel.chapterContent.observe(this) { html ->
             val baseDir = viewModel.chapterBaseDir.value ?: return@observe
+            lastLoadedHtml = html
+            lastLoadedBaseDir = baseDir
             binding.webView.loadDataWithBaseURL(
-                "file://$baseDir/",
-                html,
-                "text/html",
-                "UTF-8",
-                null
+                "file://$baseDir/", html, "text/html", "UTF-8", null
             )
         }
     }
