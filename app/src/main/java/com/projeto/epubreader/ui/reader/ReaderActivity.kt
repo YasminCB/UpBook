@@ -77,13 +77,18 @@ class ReaderActivity : AppCompatActivity() {
             supportActionBar?.hide()
             binding.toolbar.visibility = View.GONE
             binding.navBar.visibility = View.GONE
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    )
         } else {
             supportActionBar?.show()
             binding.toolbar.visibility = View.VISIBLE
             binding.navBar.visibility = View.VISIBLE
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
         }
-        binding.webView.requestLayout()
-        binding.webView.invalidate()
     }
 
      private fun setupWebView() {
