@@ -14,12 +14,30 @@
         android:orientation="vertical"
         android:padding="8dp">
 
-        <ImageView
-            android:id="@+id/imgCover"
+        <!-- Capa com botão deletar sobreposto -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:scaleType="centerCrop"
-            android:background="#E0E0E0"/>
+            android:layout_height="180dp">
+
+            <ImageView
+                android:id="@+id/imgCover"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:background="#E0E0E0"/>
+
+            <ImageButton
+                android:id="@+id/btnDelete"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="top|end"
+                android:layout_margin="4dp"
+                android:background="@drawable/bg_delete_btn"
+                android:src="@android:drawable/ic_menu_delete"
+                android:tint="@android:color/white"
+                android:contentDescription="Deletar"/>
+
+        </FrameLayout>
 
         <TextView
             android:id="@+id/tvTitle"
@@ -39,5 +57,34 @@
             android:textColor="#666666"
             android:maxLines="1"
             android:ellipsize="end"/>
+
+        <!-- Progresso -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical">
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:layout_width="0dp"
+                android:layout_height="6dp"
+                android:layout_weight="1"
+                android:progressTint="#A020F0"
+                android:progressBackgroundTint="#E0E0E0"
+                android:max="100"/>
+
+            <TextView
+                android:id="@+id/tvProgress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:textSize="11sp"
+                android:textColor="#A020F0"/>
+
+        </LinearLayout>
+
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

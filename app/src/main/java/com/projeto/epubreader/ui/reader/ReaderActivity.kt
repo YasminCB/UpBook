@@ -1,9 +1,11 @@
 package com.projeto.epubreader.ui.reader
 
+import android.content.Intent
 import android.os.Bundle
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.projeto.epubreader.databinding.ActivityReaderBinding
@@ -22,6 +24,16 @@ class ReaderActivity : AppCompatActivity() {
         }
     }
 
+    // ← fora do onCreate, no nível da classe
+    private val indexLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val chapterIndex = result.data?.getIntExtra("CHAPTER_INDEX", -1) ?: -1
+            if (chapterIndex >= 0) viewModel.loadChapter(chapterIndex)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityReaderBinding.inflate(layoutInflater)
@@ -34,12 +46,20 @@ class ReaderActivity : AppCompatActivity() {
         setupWebView()
         setupButtons()
         observeViewModel()
+
         binding.btnTheme.setOnClickListener {
             val current = viewModel.readerTheme.value ?: ReaderViewModel.ReaderTheme.DEFAULT
             ThemeBottomSheet(current) { theme ->
                 viewModel.applyTheme(theme)
             }.show(supportFragmentManager, "theme")
         }
+
+        binding.btnIndex.setOnClickListener {
+            val i = Intent(this, IndexActivity::class.java)
+            i.putExtra("BOOK_ID", bookId)
+            indexLauncher.launch(i)
+        }
+
         viewModel.loadBook(bookId)
     }
 
