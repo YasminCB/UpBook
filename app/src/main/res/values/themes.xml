@@ -1,47 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Tema base do app (modo claro) -->
-    <style name="Theme.EpubReader" parent="Theme.Material3.DayNight.NoActionBar">
-
-        <!-- Cores principais -->
-        <item name="colorPrimary">@color/purple_500</item>
+    <style name="Theme.EpubReader.Dark" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/dark_primary</item>
         <item name="colorOnPrimary">@color/white</item>
-        <item name="colorPrimaryContainer">@color/purple_100</item>
-        <item name="colorOnPrimaryContainer">@color/purple_900</item>
+        <item name="colorPrimaryContainer">@color/dark_details</item>
+        <item name="colorOnPrimaryContainer">@color/dark_text</item>
+        <item name="colorSecondary">@color/dark_details</item>
+        <item name="colorOnSecondary">@color/dark_text</item>
+        <item name="colorSurface">@color/dark_toolbar</item>
+        <item name="colorOnSurface">@color/dark_text</item>
+        <item name="colorSurfaceVariant">@color/dark_toolbar</item>
+        <item name="colorOnSurfaceVariant">@color/dark_text</item>
+        <item name="android:colorBackground">@color/dark_background</item>
+        <item name="colorOnBackground">@color/dark_text</item>
+        <item name="android:statusBarColor">@color/dark_toolbar</item>
+        <item name="android:navigationBarColor">@color/dark_toolbar</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
 
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <item name="colorSecondaryContainer">@color/teal_100</item>
-        <item name="colorOnSecondaryContainer">@color/teal_900</item>
-
-        <!-- Superfícies -->
-        <item name="colorSurface">@color/white</item>
-        <item name="colorOnSurface">@color/gray_900</item>
-        <item name="colorSurfaceVariant">@color/gray_100</item>
-        <item name="colorOnSurfaceVariant">@color/gray_700</item>
-
-        <!-- Fundo da tela -->
-        <item name="android:colorBackground">@color/gray_50</item>
-        <item name="colorOnBackground">@color/gray_900</item>
-
-        <!-- Toolbar -->
-        <item name="android:statusBarColor">?attr/colorSurface</item>
-        <item name="android:navigationBarColor">?attr/colorSurface</item>
+    <style name="Theme.EpubReader.Light" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/light_primary</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/light_details</item>
+        <item name="colorOnPrimaryContainer">@color/light_text</item>
+        <item name="colorSecondary">@color/light_details</item>
+        <item name="colorOnSecondary">@color/light_text</item>
+        <item name="colorSurface">@color/light_toolbar</item>
+        <item name="colorOnSurface">@color/light_text</item>
+        <item name="colorSurfaceVariant">@color/light_toolbar</item>
+        <item name="colorOnSurfaceVariant">@color/light_text</item>
+        <item name="android:colorBackground">@color/light_background</item>
+        <item name="colorOnBackground">@color/light_text</item>
+        <item name="android:statusBarColor">@color/light_toolbar</item>
+        <item name="android:navigationBarColor">@color/light_toolbar</item>
         <item name="android:windowLightStatusBar">true</item>
-
-        <!-- Tipografia padrão Material 3 -->
-        <item name="textAppearanceBodyLarge">@style/TextAppearance.EpubReader.BodyLarge</item>
     </style>
 
-    <!-- Tipografia -->
-    <style name="TextAppearance.EpubReader.BodyLarge" parent="TextAppearance.Material3.BodyLarge">
-        <item name="android:textSize">16sp</item>
-    </style>
-
-    <!-- Tema do Splash Screen (opcional mas recomendado) -->
-    <style name="Theme.EpubReader.Splash" parent="Theme.EpubReader">
-        <item name="android:windowBackground">@color/white</item>
-    </style>
+    <!-- Tema padrão aponta para Dark -->
+    <style name="Theme.EpubReader" parent="Theme.EpubReader.Dark"/>
 
 </resources>

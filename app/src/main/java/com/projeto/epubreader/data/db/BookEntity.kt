@@ -13,6 +13,7 @@ data class BookEntity(
     val extractedDir: String,
     val currentChapterIndex: Int = 0,
     val currentScrollY: Int = 0,
+    val currentScrollPercent: Float = 0f, // ← adicione
     val totalChapters: Int = 0,
     val addedAt: Long = System.currentTimeMillis()
 )

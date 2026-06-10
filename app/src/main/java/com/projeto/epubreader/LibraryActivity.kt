@@ -9,6 +9,7 @@ import com.projeto.epubreader.databinding.ActivityLibraryBinding
 import com.projeto.epubreader.ui.reader.ReaderActivity
 import com.projeto.epubreader.ui.library.LibraryViewModel
 import com.projeto.epubreader.ui.library.BookAdapter
+import com.projeto.epubreader.ui.theme.ThemeManager
 
 class LibraryActivity : AppCompatActivity() {
 
@@ -22,10 +23,46 @@ class LibraryActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(ThemeManager.getThemeRes(this))
         super.onCreate(savedInstanceState)
         binding = ActivityLibraryBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
+
+        val isDark = ThemeManager.isDark(this)
+
+        val switchLayout = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            layoutParams = androidx.appcompat.widget.Toolbar.LayoutParams(
+                androidx.appcompat.widget.Toolbar.LayoutParams.WRAP_CONTENT,
+                androidx.appcompat.widget.Toolbar.LayoutParams.WRAP_CONTENT,
+                android.view.Gravity.END
+            )
+        }
+
+        val icon = android.widget.ImageView(this).apply {
+            setImageResource(if (isDark) R.drawable.ic_moon else R.drawable.ic_sun)
+            layoutParams = android.widget.LinearLayout.LayoutParams(40, 40).also {
+                it.marginEnd = 8
+            }
+        }
+
+        val switchTheme = android.widget.Switch(this).apply {
+            isChecked = isDark
+            thumbTintList = android.content.res.ColorStateList.valueOf(
+                android.graphics.Color.parseColor("#6B47CB")
+            )
+            setOnCheckedChangeListener { _, dark ->
+                icon.setImageResource(if (dark) R.drawable.ic_moon else R.drawable.ic_sun)
+                ThemeManager.setDark(this@LibraryActivity, dark)
+                recreate()
+            }
+        }
+
+        switchLayout.addView(icon)
+        switchLayout.addView(switchTheme)
+        binding.toolbar.addView(switchLayout)
 
         val adapter = BookAdapter(
             onClick = { book ->
@@ -45,10 +82,10 @@ class LibraryActivity : AppCompatActivity() {
             }
         )
 
-        binding.recyclerView.adapter = adapter  // ← faltava isso
+        binding.recyclerView.adapter = adapter
 
         viewModel.books.observe(this) { books ->
-            adapter.submitList(books)           // ← e isso
+            adapter.submitList(books)
         }
 
         binding.fabAdd.setOnClickListener {

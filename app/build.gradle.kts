@@ -78,6 +78,9 @@ dependencies {
     // Glide
     implementation("com.github.bumptech.glide:glide:4.16.0")
 
+    // fonte
+    implementation("androidx.core:core-ktx:1.12.0")
+
     // Testes (mantém)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

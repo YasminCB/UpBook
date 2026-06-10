@@ -12,16 +12,6 @@
         android:background="?attr/colorSurface">
 
         <ImageButton
-            android:id="@+id/btnIndex"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_gravity="end"
-            android:layout_marginEnd="4dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_index"
-            android:contentDescription="Índice"/>
-
-        <ImageButton
             android:id="@+id/btnTheme"
             android:layout_width="48dp"
             android:layout_height="48dp"
@@ -32,6 +22,8 @@
             android:contentDescription="Tema"/>
 
     </com.google.android.material.appbar.MaterialToolbar>
+
+
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -46,42 +38,61 @@
         <RelativeLayout
             android:id="@+id/navBar"
             android:layout_width="match_parent"
-            android:layout_height="64dp"
+            android:layout_height="56dp"
             android:layout_gravity="bottom"
             android:background="?attr/colorSurface"
             android:elevation="4dp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp">
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp">
 
+            <!-- Marcações no lado esquerdo -->
             <ImageButton
-                android:id="@+id/btnPrevChapter"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_centerVertical="true"
+                android:id="@+id/btnHighlight"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:scaleType="centerInside"
-                android:src="@drawable/arrow_left"
+                android:src="@drawable/border"
+                android:contentDescription="Marcações"/>
+
+            <!-- Anterior APÓS o btnHighlight -->
+            <ImageButton
+                android:id="@+id/btnPrevChapter"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_centerVertical="true"
+                android:layout_toEndOf="@id/btnHighlight"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_arrow_left"
                 android:contentDescription="Anterior"/>
 
+            <!-- Centro entre os botões -->
             <LinearLayout
                 android:id="@+id/centerInfo"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
+                android:layout_toEndOf="@id/btnPrevChapter"
+                android:layout_toStartOf="@+id/rightButtons"
                 android:orientation="vertical"
                 android:gravity="center">
 
-                  <TextView
+                <TextView
                     android:id="@+id/tvChapterInfo"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="12sp"
+                    android:gravity="center"
+                    android:textSize="15sp"
                     android:textStyle="bold"/>
 
             </LinearLayout>
 
+            <!-- Botões direita -->
             <LinearLayout
+                android:id="@+id/rightButtons"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
@@ -90,18 +101,17 @@
 
                 <ImageButton
                     android:id="@+id/btnNextChapter"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="8dp"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:scaleType="centerInside"
-                    android:src="@drawable/arrow_right"
+                    android:src="@drawable/ic_arrow_right"
                     android:contentDescription="Próximo"/>
 
                 <ImageButton
                     android:id="@+id/btnFullscreen"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:scaleType="centerInside"
                     android:src="@drawable/fullscreen"

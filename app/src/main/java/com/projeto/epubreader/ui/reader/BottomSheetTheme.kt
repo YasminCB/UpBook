@@ -10,10 +10,15 @@ import com.projeto.epubreader.databinding.BottomSheetThemeBinding
 
 class ThemeBottomSheet(
     private val currentTheme: ReaderViewModel.ReaderTheme,
-    private val onThemeSelected: (ReaderViewModel.ReaderTheme) -> Unit
+    private val currentFont: String,
+    private val currentFontSize: Int,
+    private val onThemeSelected: (ReaderViewModel.ReaderTheme) -> Unit,
+    private val onFontSelected: (String) -> Unit,
+    private val onFontSizeSelected: (Int) -> Unit
 ) : BottomSheetDialogFragment() {
 
     private lateinit var binding: BottomSheetThemeBinding
+    private val fonts = listOf("RobotoSlab", "Inter", "Literata", "Merriweather", "OpenSans")
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -27,16 +32,13 @@ class ThemeBottomSheet(
             ReaderViewModel.ReaderTheme.DEFAULT,
             ReaderViewModel.ReaderTheme.SEPIA,
             ReaderViewModel.ReaderTheme.DARK,
-            ReaderViewModel.ReaderTheme.AMOLED,
             ReaderViewModel.ReaderTheme.GREEN
         )
 
-        // Botões de preset
         val buttons = listOf(
             binding.btnThemeDefault,
             binding.btnThemeSepia,
             binding.btnThemeDark,
-            binding.btnThemeAmoled,
             binding.btnThemeGreen
         )
 
@@ -50,21 +52,63 @@ class ThemeBottomSheet(
             }
         }
 
-        // SeekBars RGB para cor personalizada de fundo
+        val adapter = android.widget.ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            fonts
+        ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+
+        binding.spinnerFont.adapter = adapter
+        binding.spinnerFont.setSelection(fonts.indexOf(currentFont).takeIf { it >= 0 } ?: 0)
+
+        binding.spinnerFont.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>, view: android.view.View?, position: Int, id: Long) {
+                onFontSelected(fonts[position])
+                updatePreview()
+            }
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>) {}
+        }
+
+        binding.seekFontSize.progress = currentFontSize
+        binding.seekFontSize.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(s: SeekBar?, p: Int, f: Boolean) {
+                onFontSizeSelected(p)
+                updatePreview()
+            }
+            override fun onStartTrackingTouch(s: SeekBar?) {}
+            override fun onStopTrackingTouch(s: SeekBar?) {}
+        })
+
         setupCustomColor()
     }
 
     private var bgRed = 255; private var bgGreen = 255; private var bgBlue = 255
     private var fgRed = 34;  private var fgGreen = 34;  private var fgBlue = 34
 
-    private fun setupCustomColor() {
-        fun updatePreview() {
-            val bg = String.format("#%02X%02X%02X", bgRed, bgGreen, bgBlue)
-            val fg = String.format("#%02X%02X%02X", fgRed, fgGreen, fgBlue)
-            binding.previewText.setBackgroundColor(android.graphics.Color.parseColor(bg))
-            binding.previewText.setTextColor(android.graphics.Color.parseColor(fg))
-        }
+    private fun updatePreview() {
+        val bg = String.format("#%02X%02X%02X", bgRed, bgGreen, bgBlue)
+        val fg = String.format("#%02X%02X%02X", fgRed, fgGreen, fgBlue)
+        binding.previewText.setBackgroundColor(android.graphics.Color.parseColor(bg))
+        binding.previewText.setTextColor(android.graphics.Color.parseColor(fg))
 
+        val selectedFont = fonts[binding.spinnerFont.selectedItemPosition]
+        val typeface = try {
+            when (selectedFont) {
+                "Inter" -> android.graphics.Typeface.createFromAsset(requireContext().assets, "fonts/inter.ttf")
+                "Literata" -> android.graphics.Typeface.createFromAsset(requireContext().assets, "fonts/literata.ttf")
+                "Merriweather" -> android.graphics.Typeface.createFromAsset(requireContext().assets, "fonts/merriweather.ttf")
+                "OpenSans" -> android.graphics.Typeface.createFromAsset(requireContext().assets, "fonts/opensans.ttf")
+                "RobotoSlab" -> android.graphics.Typeface.createFromAsset(requireContext().assets, "fonts/robotoslab.ttf")
+                else -> android.graphics.Typeface.DEFAULT
+            }
+        } catch (e: Exception) {
+            android.graphics.Typeface.DEFAULT
+        }
+        binding.previewText.typeface = typeface
+        binding.previewText.textSize = binding.seekFontSize.progress.toFloat()
+    }
+
+    private fun setupCustomColor() {
         fun seekListener(onChange: (Int) -> Unit) = object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(s: SeekBar?, p: Int, f: Boolean) { onChange(p); updatePreview() }
             override fun onStartTrackingTouch(s: SeekBar?) {}

@@ -71,4 +71,14 @@ class BookRepository(private val context: Context) {
         File(book.filePath).delete()
         dao.deleteBook(book)
     }
+    suspend fun updateProgress(bookId: Long, chapterIndex: Int, scrollY: Int, scrollPercent: Float) {
+        withContext(Dispatchers.IO) {
+            val book = dao.getBookById(bookId) ?: return@withContext
+            dao.updateBook(book.copy(
+                currentChapterIndex = chapterIndex,
+                currentScrollY = scrollY,
+                currentScrollPercent = scrollPercent
+            ))
+        }
+    }
 }

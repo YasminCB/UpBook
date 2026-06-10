@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Dark -->
+    <color name="dark_background">#1C1C1E</color>
+    <color name="dark_toolbar">#2A2250</color>
+    <color name="dark_primary">#6B47CB</color>
+    <color name="dark_text">#F5F0E8</color>
+    <color name="dark_details">#C9990A</color>
 
-    <!-- Roxo -->
-    <color name="purple_100">#EDE7F6</color>
-    <color name="purple_200">#CE93D8</color>
-    <color name="purple_500">#9C27B0</color>
-    <color name="purple_700">#7B1FA2</color>
-    <color name="purple_900">#4A148C</color>
+    <!-- Light -->
+    <color name="light_background">#F5F0E8</color>
+    <color name="light_toolbar">#5C35B2</color>
+    <color name="light_primary">#7B2D3E</color>
+    <color name="light_text">#1C1C1E</color>
+    <color name="light_details">#B8860B</color>
 
-    <!-- Teal -->
-    <color name="teal_100">#E0F2F1</color>
-    <color name="teal_200">#80CBC4</color>
-    <color name="teal_700">#00796B</color>
-    <color name="teal_900">#004D40</color>
-
-    <!-- Cinza — escala completa -->
+    <!-- Básicas -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
     <color name="gray_50">#FAFAFA</color>
     <color name="gray_100">#F5F5F5</color>
     <color name="gray_300">#E0E0E0</color>
@@ -22,15 +24,14 @@
     <color name="gray_800">#424242</color>
     <color name="gray_900">#212121</color>
     <color name="gray_950">#121212</color>
-
-    <!-- Básicas -->
-    <color name="white">#FFFFFF</color>
-    <color name="black">#000000</color>
-
-    <!-- Cores dos marca-textos (usadas no highlight.js via CSS) -->
-    <color name="highlight_yellow">#FFD54F</color>
-    <color name="highlight_blue">#64B5F6</color>
-    <color name="highlight_green">#81C784</color>
-    <color name="highlight_pink">#F06292</color>
-
+    <color name="purple_100">#EDE7F6</color>
+    <color name="purple_500">#9C27B0</color>
+    <color name="purple_700">#7B1FA2</color>
+    <color name="purple_900">#4A148C</color>
+    <color name="teal_200">#80CBC4</color>
+    <color name="teal_700">#00796B</color>
+    <color name="highlight_yellow">#FFD700</color>
+    <color name="highlight_blue">#00BFFF</color>
+    <color name="highlight_green">#00FF7F</color>
+    <color name="highlight_pink">#DC143C</color>
 </resources>

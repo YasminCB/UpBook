@@ -21,7 +21,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:columnCount="2"
-            android:rowCount="3"
             android:useDefaultMargins="true">
 
             <Button android:id="@+id/btnThemeDefault"
@@ -33,19 +32,73 @@
             <Button android:id="@+id/btnThemeDark"
                 android:layout_width="0dp" android:layout_height="56dp"
                 android:layout_columnWeight="1" android:text="Escuro"/>
-            <Button android:id="@+id/btnThemeAmoled"
-                android:layout_width="0dp" android:layout_height="56dp"
-                android:layout_columnWeight="1" android:text="AMOLED"/>
             <Button android:id="@+id/btnThemeGreen"
                 android:layout_width="0dp" android:layout_height="56dp"
                 android:layout_columnWeight="1" android:text="Verde"/>
         </GridLayout>
 
+        <TextView
+            android:text="Fonte"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="4dp"/>
+
+        <Spinner
+            android:id="@+id/spinnerFont"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_spinner"
+            android:padding="8dp"/>
+
+        <TextView
+            android:text="Tamanho da fonte"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:text="A"
+                android:textSize="12sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"/>
+
+            <SeekBar
+                android:id="@+id/seekFontSize"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:min="12"
+                android:max="32"
+                android:progress="18"/>
+
+            <TextView
+                android:text="A"
+                android:textSize="22sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"/>
+
+        </LinearLayout>
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="#DDDDDD"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="4dp"
             android:layout_marginBottom="12dp"/>
 
         <TextView
