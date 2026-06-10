@@ -2,10 +2,7 @@ package com.projeto.epubreader.ui.reader
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.ActionMode
 import android.view.GestureDetector
-import android.view.Menu
-import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
 import android.webkit.WebResourceRequest
@@ -29,32 +26,10 @@ class ReaderActivity : AppCompatActivity() {
     private lateinit var gestureDetector: GestureDetector
     private var startX = 0f
 
-    private val highlightColors = listOf(
-        "#FFD700",
-        "#00BFFF",
-        "#00FF7F",
-        "#DC143C"
-    )
-    private val highlightEmojis = listOf("🟡", "🔵", "🟢", "🔴")
-
-    private var pendingSelectedText: String = ""
-
     inner class FootnoteInterface {
         @android.webkit.JavascriptInterface
         fun showFootnote(content: String) {
             runOnUiThread { showFootnoteDialog(content) }
-        }
-    }
-
-    inner class SelectionInterface {
-        @android.webkit.JavascriptInterface
-        fun onTextSelected(text: String) {
-            pendingSelectedText = text
-        }
-
-        @android.webkit.JavascriptInterface
-        fun onHighlightTapped(spanId: String, color: String) {
-            runOnUiThread { showHighlightOptions(spanId, color) }
         }
     }
 
@@ -108,270 +83,6 @@ class ReaderActivity : AppCompatActivity() {
         binding.root.post { toggleFullscreen() }
     }
 
-    // ── Intercepta o ActionMode nativo de seleção de texto ───────────────────
-
-    override fun onActionModeStarted(mode: ActionMode) {
-        if (mode.menu.findItem(1000) == null) {
-            highlightColors.forEachIndexed { i, hex ->
-                val item = mode.menu.add(
-                    Menu.NONE,
-                    1000 + i,
-                    Menu.NONE,
-                    "${highlightEmojis[i]} Marcar"
-                )
-
-                item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-
-                item.setOnMenuItemClickListener {
-                    mode.finish()
-                    applyHighlight(hex)
-                    true
-                }
-            }
-        }
-        super.onActionModeStarted(mode)
-    }
-
-    // ── JS injetado após carregamento ─────────────────────────────────────────
-
-    private val selectionJs = """
-        (function() {
-            if (window._readerListenersAttached) return;
-            window._readerListenersAttached = true;
-
-            document.addEventListener('selectionchange', function() {
-                clearTimeout(window._selTimer);
-                window._selTimer = setTimeout(function() {
-                    var sel = window.getSelection();
-                    var text = sel ? sel.toString().trim() : '';
-                    if (typeof AndroidSelection !== 'undefined') {
-                        AndroidSelection.onTextSelected(text);
-                    }
-                }, 200);
-            });
-
-            document.addEventListener('click', function(e) {
-                var el = e.target;
-                while (el && el !== document.body) {
-                    if (el.dataset && el.dataset.highlightId) {
-                        if (typeof AndroidSelection !== 'undefined') {
-                            AndroidSelection.onHighlightTapped(
-                                el.dataset.highlightId,
-                                el.style.backgroundColor
-                            );
-                        }
-                        return;
-                    }
-                    el = el.parentElement;
-                }
-            });
-        })();
-    """.trimIndent()
-
-    // ── Highlight: aplicar ────────────────────────────────────────────────────
-
-    private fun applyHighlight(colorHex: String) {
-        val spanId = "hl_${System.currentTimeMillis()}"
-
-        val js = """
-            (function() {
-                var sel = window.getSelection();
-                if (!sel || sel.rangeCount === 0 || sel.toString().trim() === '') {
-                    return JSON.stringify({ok: false, text: ''});
-                }
-                var text = sel.toString();
-                var range = sel.getRangeAt(0);
-                var span = document.createElement('span');
-                span.style.backgroundColor = '$colorHex';
-                span.style.color = '#000000';
-                span.dataset.highlightId = '$spanId';
-                span.style.borderRadius = '2px';
-                try {
-                    range.surroundContents(span);
-                } catch(e) {
-                    var frag = range.extractContents();
-                    span.appendChild(frag);
-                    range.insertNode(span);
-                }
-                sel.removeAllRanges();
-                return JSON.stringify({ok: true, text: text});
-            })()
-        """.trimIndent()
-
-        binding.webView.evaluateJavascript(js) { result ->
-            try {
-                val clean = result?.trim('"')?.replace("\\\"", "\"") ?: return@evaluateJavascript
-                val json = org.json.JSONObject(clean)
-                if (json.optBoolean("ok")) {
-                    val text = json.optString("text")
-                    if (text.isNotBlank()) {
-                        val bookId = intent.getLongExtra("BOOK_ID", -1)
-                        val chapterIndex = viewModel.currentChapterIndex.value ?: 0
-                        viewModel.saveHighlight(bookId, chapterIndex, text, colorHex)
-                    }
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("HIGHLIGHT", "Erro ao parsear resultado: ${e.message}")
-            }
-        }
-    }
-
-    // ── Highlight: opções ao tocar num marcado ────────────────────────────────
-
-    private fun showHighlightOptions(spanId: String, colorRgb: String) {
-        val dialog = com.google.android.material.bottomsheet.BottomSheetDialog(this)
-        val layout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(32, 24, 32, 32)
-        }
-
-        val title = android.widget.TextView(this).apply {
-            text = "Marcação"
-            textSize = 16f
-            setTypeface(null, android.graphics.Typeface.BOLD)
-            setPadding(0, 0, 0, 24)
-        }
-        layout.addView(title)
-
-        val colorRow = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.HORIZONTAL
-            setPadding(0, 0, 0, 24)
-        }
-        highlightColors.forEachIndexed { i, hex ->
-            val circle = View(this).apply {
-                val size = (40 * resources.displayMetrics.density).toInt()
-                layoutParams = android.widget.LinearLayout.LayoutParams(size, size).also {
-                    it.marginEnd = (12 * resources.displayMetrics.density).toInt()
-                }
-                background = android.graphics.drawable.GradientDrawable().apply {
-                    shape = android.graphics.drawable.GradientDrawable.OVAL
-                    setColor(android.graphics.Color.parseColor(hex))
-                    setStroke(
-                        (2 * resources.displayMetrics.density).toInt(),
-                        android.graphics.Color.DKGRAY
-                    )
-                }
-                setOnClickListener {
-                    dialog.dismiss()
-                    changeHighlightColor(spanId, hex)
-                }
-            }
-            colorRow.addView(circle)
-        }
-        layout.addView(colorRow)
-
-        val btnDelete = com.google.android.material.button.MaterialButton(this).apply {
-            text = "🗑 Remover marcação"
-            setBackgroundColor(android.graphics.Color.parseColor("#DC143C"))
-            setTextColor(android.graphics.Color.WHITE)
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            setOnClickListener {
-                dialog.dismiss()
-                deleteHighlight(spanId)
-            }
-        }
-        layout.addView(btnDelete)
-
-        dialog.setContentView(layout)
-        dialog.show()
-    }
-
-    private fun changeHighlightColor(spanId: String, newColor: String) {
-        binding.webView.evaluateJavascript("""
-            (function() {
-                var spans = document.querySelectorAll('[data-highlight-id="$spanId"]');
-                spans.forEach(function(s) { s.style.backgroundColor = '$newColor'; });
-            })()
-        """.trimIndent(), null)
-    }
-
-    private fun deleteHighlight(spanId: String) {
-        val js = """
-            (function() {
-                var spans = document.querySelectorAll('[data-highlight-id="$spanId"]');
-                spans.forEach(function(span) {
-                    var parent = span.parentNode;
-                    while (span.firstChild) {
-                        parent.insertBefore(span.firstChild, span);
-                    }
-                    parent.removeChild(span);
-                });
-                return '$spanId';
-            })()
-        """.trimIndent()
-
-        binding.webView.evaluateJavascript(js) { result ->
-            val id = result?.trim('"') ?: ""
-            if (id.isNotBlank()) {
-                android.util.Log.d("HIGHLIGHT", "Span removido do DOM: $id")
-            }
-        }
-    }
-
-    // ── Reaplicar highlights salvos ───────────────────────────────────────────
-
-    private fun reapplyHighlights() {
-        val bookId = intent.getLongExtra("BOOK_ID", -1)
-        val chapterIndex = viewModel.currentChapterIndex.value ?: 0
-
-        viewModel.getHighlightsForChapter(bookId, chapterIndex) { highlights ->
-            if (highlights.isEmpty()) return@getHighlightsForChapter
-
-            val js = buildString {
-                append("(function() {")
-                highlights.forEachIndexed { index, h ->
-                    val escapedText = h.selectedText
-                        .replace("\\", "\\\\")
-                        .replace("'", "\\'")
-                        .replace("\n", " ")
-                        .replace("\r", "")
-                    val hex = h.color
-                    val spanId = "hl_saved_$index"
-                    append("""
-                        (function() {
-                            var spanId = '$spanId';
-                            var text = '$escapedText';
-                            var hex = '$hex';
-                            var body = document.body;
-                            var walker = document.createTreeWalker(
-                                body, NodeFilter.SHOW_TEXT, null, false
-                            );
-                            var node;
-                            while ((node = walker.nextNode())) {
-                                var idx = node.nodeValue.indexOf(text);
-                                if (idx >= 0) {
-                                    var range = document.createRange();
-                                    range.setStart(node, idx);
-                                    range.setEnd(node, idx + text.length);
-                                    var span = document.createElement('span');
-                                    span.style.backgroundColor = hex;
-                                    span.style.color = '#000000';
-                                    span.dataset.highlightId = spanId;
-                                    span.style.borderRadius = '2px';
-                                    try { range.surroundContents(span); } catch(e) {}
-                                    break;
-                                }
-                            }
-                        })();
-                    """.trimIndent())
-                }
-                append("})()")
-            }
-
-            runOnUiThread {
-                binding.webView.evaluateJavascript(js) {
-                    binding.webView.evaluateJavascript("""
-                        window._readerListenersAttached = false;
-                        $selectionJs
-                    """.trimIndent(), null)
-                }
-            }
-        }
-    }
-
     // ── WebView setup ─────────────────────────────────────────────────────────
 
     private fun setupWebView() {
@@ -382,29 +93,6 @@ class ReaderActivity : AppCompatActivity() {
             }
         })
 
-        // Intercepta o ActionMode nativo de seleção de texto para adicionar botões de highlight
-        val highlightActionModeCallback = object : ActionMode.Callback {
-            override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
-                highlightColors.forEachIndexed { i, _ ->
-                    menu.add(Menu.NONE, 1000 + i, Menu.NONE, "${highlightEmojis[i]} Marcar")
-                        .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-                }
-                return true
-            }
-            override fun onPrepareActionMode(mode: ActionMode, menu: Menu) = false
-            override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
-                val idx = item.itemId - 1000
-                if (idx in highlightColors.indices) {
-                    val hex = highlightColors[idx]
-                    mode.finish()
-                    applyHighlight(hex)
-                    return true
-                }
-                return false
-            }
-            override fun onDestroyActionMode(mode: ActionMode) {}
-        }
-
         binding.webView.apply {
             settings.javaScriptEnabled = true
             settings.builtInZoomControls = false
@@ -413,12 +101,6 @@ class ReaderActivity : AppCompatActivity() {
             settings.allowContentAccess = true
             settings.allowFileAccessFromFileURLs = true
             addJavascriptInterface(FootnoteInterface(), "AndroidFootnote")
-            addJavascriptInterface(SelectionInterface(), "AndroidSelection")
-
-            // WebView herda de View; o callback de seleção fica em TextView,
-            // mas podemos interceptar via startActionMode na própria Activity.
-            // O highlightActionModeCallback é chamado em startHighlightActionMode()
-            // acionado pelo selectionJs quando há texto selecionado.
 
             setOnTouchListener { _, event ->
                 gestureDetector.onTouchEvent(event)
@@ -449,9 +131,6 @@ class ReaderActivity : AppCompatActivity() {
 
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) {
-                    view?.evaluateJavascript(selectionJs, null)
-                    reapplyHighlights()
-
                     val book = viewModel.currentBook.value
                     val percent = book?.currentScrollPercent ?: 0f
                     if (percent > 0f) {
@@ -563,13 +242,6 @@ class ReaderActivity : AppCompatActivity() {
             val current = viewModel.currentChapterIndex.value ?: 0
             val total = viewModel.totalChapters.value ?: 0
             if (current < total - 1) viewModel.loadChapter(current + 1)
-        }
-
-        binding.btnHighlight.setOnClickListener {
-            val bookId = intent.getLongExtra("BOOK_ID", -1)
-            startActivity(
-                Intent(this, HighlightsActivity::class.java).putExtra("BOOK_ID", bookId)
-            )
         }
     }
 

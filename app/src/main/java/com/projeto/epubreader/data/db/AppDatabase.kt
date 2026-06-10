@@ -8,13 +8,12 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [BookEntity::class, BookmarkEntity::class, HighlightEntity::class],
+    entities = [BookEntity::class, BookmarkEntity::class],
     version = 5
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun bookDao(): BookDao
-    abstract fun highlightDao(): HighlightDao
 
     companion object {
 
@@ -23,7 +22,6 @@ abstract class AppDatabase : RoomDatabase() {
 
         private val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // 1. Cria tabela nova
                 database.execSQL("""
                     CREATE TABLE IF NOT EXISTS books_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -39,7 +37,6 @@ abstract class AppDatabase : RoomDatabase() {
                     )
                 """.trimIndent())
 
-                // 2. Copia os dados
                 database.execSQL("""
                     INSERT INTO books_new (
                         id, title, author, filePath, coverPath, extractedDir,
@@ -53,7 +50,6 @@ abstract class AppDatabase : RoomDatabase() {
                     FROM books
                 """.trimIndent())
 
-                // 3. Remove antiga e renomeia
                 database.execSQL("DROP TABLE books")
                 database.execSQL("ALTER TABLE books_new RENAME TO books")
             }
@@ -67,22 +63,6 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        private val MIGRATION_4_5 = object : Migration(4, 5) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS highlights (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        bookId INTEGER NOT NULL,
-                        chapterIndex INTEGER NOT NULL,
-                        selectedText TEXT NOT NULL,
-                        color TEXT NOT NULL,
-                        startOffset INTEGER NOT NULL DEFAULT 0,
-                        createdAt INTEGER NOT NULL DEFAULT 0
-                    )
-                """.trimIndent())
-            }
-        }
-
         fun getInstance(context: Context): AppDatabase =
             INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Room.databaseBuilder(
@@ -90,7 +70,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "epub_reader_db"
                 )
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
                     .fallbackToDestructiveMigration()
                     .build().also { INSTANCE = it }
             }

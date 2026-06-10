@@ -4,10 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.projeto.epubreader.data.db.AppDatabase
 import com.projeto.epubreader.data.db.BookEntity
 import com.projeto.epubreader.data.db.BookRepository
-import com.projeto.epubreader.data.db.HighlightEntity
 import com.projeto.epubreader.parser.EpubParser
 import kotlinx.coroutines.launch
 import java.io.File
@@ -17,7 +15,6 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
     private val repository = BookRepository(application)
     private val parser = EpubParser(application)
     private val prefs = ReaderPreferences(application)
-    private val db = AppDatabase.getInstance(application) // <- estava faltando isso
 
     val currentBook = MutableLiveData<BookEntity>()
     val currentChapterIndex = MutableLiveData(0)
@@ -63,29 +60,6 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
         val book = currentBook.value ?: return
         currentChapterIndex.value = chapterIndex
         loadChapter(book, chapterIndex)
-    }
-
-    fun saveHighlight(bookId: Long, chapterIndex: Int, text: String, color: String) =
-        viewModelScope.launch {
-            db.highlightDao().insert(
-                HighlightEntity(
-                    bookId = bookId,
-                    chapterIndex = chapterIndex,
-                    selectedText = text,
-                    color = color
-                )
-            )
-        }
-
-    fun getHighlightsForChapter(
-        bookId: Long,
-        chapterIndex: Int,
-        callback: (List<HighlightEntity>) -> Unit
-    ) {
-        viewModelScope.launch {
-            val highlights = db.highlightDao().getByChapter(bookId, chapterIndex) // <- nome correto
-            callback(highlights)
-        }
     }
 
     private fun loadChapter(book: BookEntity, index: Int) = viewModelScope.launch {
