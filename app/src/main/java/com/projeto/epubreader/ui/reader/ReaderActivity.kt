@@ -131,13 +131,20 @@ class ReaderActivity : AppCompatActivity() {
 
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) {
-                    val book = viewModel.currentBook.value
-                    val percent = book?.currentScrollPercent ?: 0f
-                    if (percent > 0f) {
-                        binding.webView.evaluateJavascript(
-                            "var h = document.body.scrollHeight - window.innerHeight; window.scrollTo(0, h * $percent);",
-                            null
-                        )
+                    if (viewModel.isChapterNavigation) {
+                        // Troca de capítulo → vai pro topo
+                        binding.webView.evaluateJavascript("window.scrollTo(0, 0);", null)
+                        viewModel.isChapterNavigation = false  // reseta a flag
+                    } else {
+                        // Reabertura do app → restaura posição salva
+                        val book = viewModel.currentBook.value
+                        val percent = book?.currentScrollPercent ?: 0f
+                        if (percent > 0f) {
+                            binding.webView.evaluateJavascript(
+                                "var h = document.body.scrollHeight - window.innerHeight; window.scrollTo(0, h * $percent);",
+                                null
+                            )
+                        }
                     }
                 }
 

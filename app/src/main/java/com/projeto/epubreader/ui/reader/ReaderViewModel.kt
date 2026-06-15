@@ -23,6 +23,8 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
     val chapterBaseDir = MutableLiveData<String>()
     val currentChapterPath = MutableLiveData<String>()
     val pageInfo = MutableLiveData<String>()
+    // Adicione essa variável no ViewModel
+    var isChapterNavigation = false  // true = troca de capítulo (vai pro topo)
 
     val readerTheme = MutableLiveData(
         prefs.loadTheme().let { (bg, text, name) ->
@@ -58,6 +60,7 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
 
     fun loadChapter(chapterIndex: Int) {
         val book = currentBook.value ?: return
+        isChapterNavigation = true  // ← adicionar isso
         currentChapterIndex.value = chapterIndex
         loadChapter(book, chapterIndex)
     }
